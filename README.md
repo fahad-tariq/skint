@@ -81,7 +81,7 @@ skint migrate                Import config from the old bash version
 ### Global flags
 
 ```
--c, --config <path>    Config file path
+    --config <path>    Config file path
 -v, --verbose          Verbose output
 -q, --quiet            Minimal output
 -y, --yes              Auto-confirm prompts

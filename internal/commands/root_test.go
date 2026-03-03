@@ -50,13 +50,12 @@ func TestClaudePassthroughFlags(t *testing.T) {
 			}
 
 			// Replace PersistentPreRunE to only build passthrough args (skip initialize).
-			origPreRun := root.PersistentPreRunE
-			_ = origPreRun
 			cc := &CmdContext{OutputFormat: "human"}
 			root.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 				cmd.SetContext(context.WithValue(cmd.Context(), ctxKey, cc))
 
-				// Re-read flag values the same way the real PersistentPreRunE does.
+				// Read parsed flag values (production uses closure-captured vars bound via StringVar/BoolVarP,
+				// but the result is identical since both read from the same pflag set).
 				resume, _ := cmd.Flags().GetString("resume")
 				cont, _ := cmd.Flags().GetBool("continue")
 

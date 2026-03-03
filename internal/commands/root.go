@@ -39,7 +39,8 @@ Ollama, LM Studio, or llama.cpp.`,
 			// Ensure context is set before initialize runs
 			cmd.SetContext(context.WithValue(cmd.Context(), ctxKey, cc))
 
-			// Build passthrough args for claude
+			// Build passthrough args for claude (reset first to avoid accumulation)
+			cc.ClaudeExtraArgs = nil
 			if resumeSession != "" {
 				cc.ClaudeExtraArgs = append(cc.ClaudeExtraArgs, "--resume", resumeSession)
 			}
