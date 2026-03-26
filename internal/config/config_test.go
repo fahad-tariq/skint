@@ -174,6 +174,7 @@ func TestGetProvider(t *testing.T) {
 			}
 			if got == nil {
 				t.Fatalf("expected provider %q, got nil", tc.wantName)
+				return
 			}
 			if got.Name != tc.wantName {
 				t.Errorf("got Name %q, want %q", got.Name, tc.wantName)
