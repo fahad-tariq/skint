@@ -149,13 +149,12 @@ func Init(cfg *config.Config) {
 
 // Print functions for common use cases
 
-// Success prints a success message
+// Success prints a success message to stderr
 func Success(format string, a ...interface{}) {
 	if Colors.Enabled {
-		Colors.Green.Printf("%s ", Sym.OK)
+		Colors.Green.Fprintf(os.Stderr, "%s ", Sym.OK)
 	}
-	color.White(format, a...)
-	fmt.Println()
+	fmt.Fprintf(os.Stderr, format+"\n", a...)
 }
 
 // Error prints an error message
@@ -174,25 +173,25 @@ func Warning(format string, a ...interface{}) {
 	fmt.Fprintf(os.Stderr, format+"\n", a...)
 }
 
-// Info prints an info message
+// Info prints an info message to stderr
 func Info(format string, a ...interface{}) {
 	if Colors.Enabled {
-		Colors.Blue.Printf("%s ", Sym.Info)
+		Colors.Blue.Fprintf(os.Stderr, "%s ", Sym.Info)
 	}
-	fmt.Printf(format+"\n", a...)
+	fmt.Fprintf(os.Stderr, format+"\n", a...)
 }
 
-// Log prints a simple log message
+// Log prints a simple log message to stderr
 func Log(format string, a ...interface{}) {
-	fmt.Printf(format+"\n", a...)
+	fmt.Fprintf(os.Stderr, format+"\n", a...)
 }
 
-// Dim prints dimmed text
+// Dim prints dimmed text to stderr
 func Dim(format string, a ...interface{}) {
 	if Colors.Enabled {
-		Colors.Dim.Printf(format, a...)
+		Colors.Dim.Fprintf(os.Stderr, format, a...)
 	} else {
-		fmt.Printf(format, a...)
+		fmt.Fprintf(os.Stderr, format, a...)
 	}
 }
 

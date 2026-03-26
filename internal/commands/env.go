@@ -1,8 +1,10 @@
 package commands
 
 import (
+	"encoding/json"
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/sammcj/skint/internal/providers"
 	"github.com/spf13/cobra"
@@ -66,8 +68,6 @@ func runEnv(cmd *cobra.Command, args []string) error {
 	// Get env vars
 	envVars := provider.GetEnvVars()
 
-	fmt.Printf("# skint: provider %s\n", provider.DisplayName())
-
 	// Print in sorted order for deterministic output
 	keys := make([]string, 0, len(envVars))
 	for k := range envVars {
@@ -75,13 +75,30 @@ func runEnv(cmd *cobra.Command, args []string) error {
 	}
 	sort.Strings(keys)
 
-	for _, k := range keys {
-		v := envVars[k]
-		if v == "" {
-			// Empty value means unset it
-			fmt.Printf("unset %s\n", k)
-		} else {
-			fmt.Printf("export %s='%s'\n", k, v)
+	switch cc.Cfg.OutputFormat {
+	case "json":
+		data := make(map[string]string)
+		for _, k := range keys {
+			data[k] = envVars[k]
+		}
+		enc := json.NewEncoder(cmd.OutOrStdout())
+		enc.SetIndent("", "  ")
+		return enc.Encode(data)
+	case "plain":
+		for _, k := range keys {
+			fmt.Fprintf(cmd.OutOrStdout(), "%s=%s\n", k, envVars[k])
+		}
+	default:
+		fmt.Printf("# skint: provider %s\n", provider.DisplayName())
+		for _, k := range keys {
+			v := envVars[k]
+			if v == "" {
+				fmt.Printf("unset %s\n", k)
+			} else {
+				// Escape single quotes for safe shell eval
+				escaped := strings.ReplaceAll(v, "'", "'\"'\"'")
+				fmt.Printf("export %s='%s'\n", k, escaped)
+			}
 		}
 	}
 

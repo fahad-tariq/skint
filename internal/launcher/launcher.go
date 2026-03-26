@@ -6,11 +6,17 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"syscall"
 
 	"github.com/sammcj/skint/internal/config"
 	"github.com/sammcj/skint/internal/providers"
 )
+
+// shellEscape escapes a string for safe inclusion inside single quotes in shell scripts.
+func shellEscape(s string) string {
+	return strings.ReplaceAll(s, "'", "'\"'\"'")
+}
 
 // Launcher handles spawning Claude with the correct environment
 type Launcher struct {
@@ -139,7 +145,7 @@ set -euo pipefail
 # Show banner
 if [[ "${SKINT_NO_BANNER:-}" != "1" && -t 1 ]]; then
   cat "${XDG_DATA_HOME:-$HOME/.local/share}/skint/banner" 2>/dev/null || echo "  ____ _       _   _"
-  echo "    + %s"
+  echo '    + %s'
   echo
 fi
 
@@ -151,15 +157,15 @@ if [[ -f "$SECRETS" ]]; then
 fi
 
 # Set environment variables
-`, provider.DisplayName())
+`, shellEscape(provider.DisplayName()))
 
 	// Add provider-specific exports
 	envVars := provider.GetEnvVars()
 	for key, value := range envVars {
 		if value == "" {
-			script += fmt.Sprintf("export %s=\"\"\n", key)
+			script += fmt.Sprintf("export %s=''\n", key)
 		} else {
-			script += fmt.Sprintf("export %s=%q\n", key, value)
+			script += fmt.Sprintf("export %s='%s'\n", key, shellEscape(value))
 		}
 	}
 

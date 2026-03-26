@@ -32,9 +32,18 @@ func (m *Model) updateMainScreen(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			}
 		case "o":
 			if !m.list.SettingFilter() {
-				m.screen = ScreenOpenRouter
-				m.inputFocus = 0
-				return m, nil
+				if def, ok := m.registry.Get("openrouter"); ok {
+					p := m.cfg.GetProvider(def.Name)
+					configured := p != nil && p.IsConfigured()
+					item := ProviderItem{
+						definition: def,
+						configured: configured,
+						active:     m.cfg.DefaultProvider == def.Name,
+						category:   "International",
+					}
+					m.selectedProvider = def
+					return m.handleProviderSelect(item)
+				}
 			}
 		case "c", "a":
 			if !m.list.SettingFilter() {

@@ -23,9 +23,7 @@ const (
 	ScreenMain Screen = iota
 	ScreenProviderConfig
 	ScreenAPIKeyInput
-	ScreenOpenRouter
 	ScreenCustomProvider
-	ScreenConfirm
 	ScreenSuccess
 	ScreenError
 )

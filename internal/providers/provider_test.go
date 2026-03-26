@@ -47,6 +47,7 @@ func TestBuiltinProvider_GetEnvVars(t *testing.T) {
 			want: map[string]string{
 				"ANTHROPIC_BASE_URL":             "https://example.com",
 				"ANTHROPIC_AUTH_TOKEN":           "token123",
+				"ANTHROPIC_API_KEY":              "",
 				"ANTHROPIC_MODEL":                "test-model",
 				"ANTHROPIC_DEFAULT_HAIKU_MODEL":  "h",
 				"ANTHROPIC_DEFAULT_SONNET_MODEL": "s",
@@ -65,6 +66,7 @@ func TestBuiltinProvider_GetEnvVars(t *testing.T) {
 			want: map[string]string{
 				"ANTHROPIC_BASE_URL":         "https://api.kimi.example",
 				"ANTHROPIC_AUTH_TOKEN":       "key",
+				"ANTHROPIC_API_KEY":          "",
 				"ANTHROPIC_MODEL":            "kimi-k2.5",
 				"ANTHROPIC_SMALL_FAST_MODEL": "kimi-k2.5",
 			},
@@ -105,7 +107,8 @@ func TestBuiltinProvider_GetEnvVars_KeyEnvVar(t *testing.T) {
 	}}
 	got := p.GetEnvVars()
 	want := map[string]string{
-		"ANTHROPIC_API_KEY": "sk-ant-test",
+		"ANTHROPIC_API_KEY":    "sk-ant-test",
+		"ANTHROPIC_AUTH_TOKEN": "",
 	}
 	assertEnvVars(t, got, want)
 }
@@ -168,7 +171,9 @@ func TestLocalProvider_GetEnvVars(t *testing.T) {
 				baseURL: "http://localhost:11434",
 			}},
 			want: map[string]string{
-				"ANTHROPIC_BASE_URL": "http://localhost:11434",
+				"ANTHROPIC_BASE_URL":   "http://localhost:11434",
+				"ANTHROPIC_AUTH_TOKEN": "",
+				"ANTHROPIC_API_KEY":    "",
 			},
 		},
 		{
@@ -210,7 +215,9 @@ func TestLocalProvider_GetEnvVars(t *testing.T) {
 				baseURL: "http://localhost:8000",
 			}},
 			want: map[string]string{
-				"ANTHROPIC_BASE_URL": "http://localhost:8000",
+				"ANTHROPIC_BASE_URL":   "http://localhost:8000",
+				"ANTHROPIC_AUTH_TOKEN": "",
+				"ANTHROPIC_API_KEY":    "",
 			},
 		},
 	}
@@ -448,7 +455,8 @@ func TestFromConfig_AnthropicAPIProvider(t *testing.T) {
 
 	env := p.GetEnvVars()
 	wantEnv := map[string]string{
-		"ANTHROPIC_API_KEY": "sk-ant-real-key",
+		"ANTHROPIC_API_KEY":    "sk-ant-real-key",
+		"ANTHROPIC_AUTH_TOKEN": "",
 	}
 	assertEnvVars(t, env, wantEnv)
 }

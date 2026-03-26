@@ -78,6 +78,13 @@ func (m *Manager) Load() error {
 		return fmt.Errorf("failed to parse config file: %w", err)
 	}
 
+	// Clear any legacy plaintext API keys (migration artifact)
+	for _, p := range m.config.Providers {
+		if p.APIKey != "" && p.APIKeyRef != "" {
+			p.APIKey = ""
+		}
+	}
+
 	// Apply environment overrides
 	m.applyEnvOverrides()
 
@@ -99,6 +106,13 @@ func (m *Manager) Save() error {
 	// Ensure config directory exists
 	if err := os.MkdirAll(m.configDir, 0700); err != nil {
 		return fmt.Errorf("failed to create config directory: %w", err)
+	}
+
+	// Check for symlink before writing (security)
+	if info, err := os.Lstat(m.configFile); err == nil {
+		if info.Mode()&os.ModeSymlink != 0 {
+			return fmt.Errorf("config file is a symlink - refusing to write for security")
+		}
 	}
 
 	// Marshal to YAML

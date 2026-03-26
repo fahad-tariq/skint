@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -97,5 +98,12 @@ func runExec(cmd *cobra.Command, args []string) error {
 	execCmd.Stdout = os.Stdout
 	execCmd.Stderr = os.Stderr
 
-	return execCmd.Run()
+	if err := execCmd.Run(); err != nil {
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
+			os.Exit(exitErr.ExitCode())
+		}
+		return err
+	}
+	return nil
 }

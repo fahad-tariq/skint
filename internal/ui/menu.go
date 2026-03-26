@@ -3,6 +3,7 @@ package ui
 import (
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/sammcj/skint/internal/config"
@@ -33,14 +34,6 @@ func NewProviderMenu(cfg *config.Config, registry *providers.Registry, form *Con
 	m.addItem("native", "Anthropic direct", "NATIVE", func() error {
 		return form.ConfigureBuiltin(cfg, "native")
 	})
-
-	// China providers
-	for _, def := range registry.GroupedList()["China"] {
-		def := def // capture range variable
-		m.addItem(def.Name, def.DisplayName, "CHINA", func() error {
-			return form.ConfigureBuiltin(cfg, def.Name)
-		})
-	}
 
 	// International providers
 	for _, def := range registry.GroupedList()["International"] {
@@ -80,9 +73,9 @@ func (m *ProviderMenu) addItem(key, displayName, category string, handler func()
 
 // Display shows the menu and returns the selected handler
 func (m *ProviderMenu) Display(cfg *config.Config) (func() error, error) {
-	fmt.Println()
+	fmt.Fprintln(os.Stderr)
 	Box("SKINT CONFIGURATION", 54)
-	fmt.Println()
+	fmt.Fprintln(os.Stderr)
 
 	// Count configured providers
 	configured := 0
@@ -98,7 +91,7 @@ func (m *ProviderMenu) Display(cfg *config.Config) (func() error, error) {
 	for i, item := range m.items {
 		if item.Category != currentCategory {
 			if currentCategory != "" {
-				fmt.Println()
+				fmt.Fprintln(os.Stderr)
 			}
 			Log("%s", Bold(item.Category))
 			currentCategory = item.Category
@@ -109,10 +102,10 @@ func (m *ProviderMenu) Display(cfg *config.Config) (func() error, error) {
 		ListItem(isConfigured, "%-2d %-12s %-24s", i+1, item.Key, item.DisplayName)
 	}
 
-	fmt.Println()
+	fmt.Fprintln(os.Stderr)
 	Separator(54)
 	Dim("  [t] Test providers  [q] Quit\n")
-	fmt.Println()
+	fmt.Fprintln(os.Stderr)
 
 	// Get choice
 	choice := Prompt("Choose", "q")

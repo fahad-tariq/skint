@@ -107,20 +107,20 @@ func (m *Migration) LoadSecrets() (map[string]string, error) {
 	return secrets, nil
 }
 
-// unescape handles bash escape sequences
+// unescape handles bash escape sequences.
+// Order matters: backslash must be processed first to avoid double-unescaping.
 func (m *Migration) unescape(s string) string {
-	// Simple unescaping for common cases
-	replacements := map[string]string{
-		`\\`: `\`,
-		`\"`: `"`,
-		`\'`: `'`,
-		`\n`: "\n",
-		`\t`: "\t",
-		`\$`: `$`,
+	replacements := []struct{ old, new string }{
+		{`\\`, `\`},
+		{`\"`, `"`},
+		{`\'`, `'`},
+		{`\n`, "\n"},
+		{`\t`, "\t"},
+		{`\$`, `$`},
 	}
 
-	for old, new := range replacements {
-		s = strings.ReplaceAll(s, old, new)
+	for _, r := range replacements {
+		s = strings.ReplaceAll(s, r.old, r.new)
 	}
 
 	return s

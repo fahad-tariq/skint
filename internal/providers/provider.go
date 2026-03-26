@@ -125,6 +125,13 @@ func (p *BuiltinProvider) GetEnvVars() map[string]string {
 			envVar = p.keyEnvVar
 		}
 		env[envVar] = p.apiKey
+
+		// Clear the other key var to avoid conflicts
+		if envVar == "ANTHROPIC_API_KEY" {
+			env["ANTHROPIC_AUTH_TOKEN"] = ""
+		} else {
+			env["ANTHROPIC_API_KEY"] = ""
+		}
 	}
 
 	if p.model != "" {
@@ -188,10 +195,14 @@ func (p *LocalProvider) GetEnvVars() map[string]string {
 
 	env["ANTHROPIC_BASE_URL"] = p.baseURL
 
+	// Always clear API key vars for local providers to prevent leaking
+	// a real Anthropic key from the environment
 	if p.authToken != "" {
 		env["ANTHROPIC_AUTH_TOKEN"] = p.authToken
-		env["ANTHROPIC_API_KEY"] = ""
+	} else {
+		env["ANTHROPIC_AUTH_TOKEN"] = ""
 	}
+	env["ANTHROPIC_API_KEY"] = ""
 
 	if p.model != "" {
 		env["ANTHROPIC_MODEL"] = p.model
@@ -258,7 +269,10 @@ func FromConfig(cp *config.Provider) (Provider, error) {
 	case config.ProviderTypeBuiltin:
 		return &BuiltinProvider{baseProvider: bp}, nil
 	case config.ProviderTypeOpenRouter:
-		bp.model = cp.Model // OpenRouter uses Model field
+		// OpenRouter uses Model field; only override if set
+		if cp.Model != "" {
+			bp.model = cp.Model
+		}
 		return &OpenRouterProvider{baseProvider: bp}, nil
 	case config.ProviderTypeLocal:
 		return &LocalProvider{

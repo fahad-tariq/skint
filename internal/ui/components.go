@@ -21,16 +21,18 @@ func Box(title string, width int) {
 		title = title[:inner-7] + "..."
 	}
 
-	// Center title
-	pad := (inner - len(title)) / 2
+	// Center title using raw (non-ANSI) title length
+	titleLen := len(title)
+	pad := (inner - titleLen) / 2
+	rightPad := inner - pad - titleLen
 
 	// Build horizontal line
 	hline := strings.Repeat(Sym.BoxH, inner)
 
-	// Print box
-	fmt.Printf("%s%s%s\n", Sym.BoxTL, hline, Sym.BoxTR)
-	fmt.Printf("%s%*s%s%*s%s\n", Sym.BoxV, pad, "", Bold(title), inner-pad-len(title), "", Sym.BoxV)
-	fmt.Printf("%s%s%s\n", Sym.BoxBL, hline, Sym.BoxBR)
+	// Print box to stderr
+	fmt.Fprintf(os.Stderr, "%s%s%s\n", Sym.BoxTL, hline, Sym.BoxTR)
+	fmt.Fprintf(os.Stderr, "%s%s%s%s%s\n", Sym.BoxV, strings.Repeat(" ", pad), Bold(title), strings.Repeat(" ", rightPad), Sym.BoxV)
+	fmt.Fprintf(os.Stderr, "%s%s%s\n", Sym.BoxBL, hline, Sym.BoxBR)
 }
 
 // Separator draws a horizontal separator
@@ -39,21 +41,21 @@ func Separator(width int) {
 		width = 40
 	}
 	Dim("%s", strings.Repeat(Sym.BoxH, width))
-	fmt.Println()
+	fmt.Fprintln(os.Stderr)
 }
 
 // ListItem prints a list item
 func ListItem(checked bool, format string, a ...interface{}) {
 	if checked {
 		if Colors.Enabled {
-			Colors.Green.Printf("  %s ", Sym.Check)
+			Colors.Green.Fprintf(os.Stderr, "  %s ", Sym.Check)
 		} else {
-			fmt.Printf("  %s ", Sym.Check)
+			fmt.Fprintf(os.Stderr, "  %s ", Sym.Check)
 		}
 	} else {
 		Dim("  %s ", Sym.Uncheck)
 	}
-	fmt.Printf(format+"\n", a...)
+	fmt.Fprintf(os.Stderr, format+"\n", a...)
 }
 
 // Prompt prints a prompt and returns user input
@@ -64,9 +66,9 @@ func Prompt(message, defaultValue string) string {
 	}
 
 	if Colors.Enabled {
-		Colors.Cyan.Printf("%s: ", promptText)
+		Colors.Cyan.Fprintf(os.Stderr, "%s: ", promptText)
 	} else {
-		fmt.Printf("%s: ", promptText)
+		fmt.Fprintf(os.Stderr, "%s: ", promptText)
 	}
 
 	var response string
@@ -87,9 +89,9 @@ func Confirm(message string, defaultYes bool) bool {
 	}
 
 	if Colors.Enabled {
-		Colors.Cyan.Printf("%s %s: ", message, hint)
+		Colors.Cyan.Fprintf(os.Stderr, "%s %s: ", message, hint)
 	} else {
-		fmt.Printf("%s %s: ", message, hint)
+		fmt.Fprintf(os.Stderr, "%s %s: ", message, hint)
 	}
 
 	var response string
@@ -104,18 +106,18 @@ func Confirm(message string, defaultYes bool) bool {
 
 // ConfirmDanger asks for dangerous confirmation with phrase
 func ConfirmDanger(action, phrase string) bool {
-	fmt.Println()
+	fmt.Fprintln(os.Stderr)
 	Box("DANGER", 40)
-	fmt.Println()
+	fmt.Fprintln(os.Stderr)
 
 	if Colors.Enabled {
-		Colors.Red.Println(action)
+		Colors.Red.Fprintln(os.Stderr, action)
 	} else {
-		fmt.Println(action)
+		fmt.Fprintln(os.Stderr, action)
 	}
 
-	fmt.Println()
-	fmt.Printf("Type %s to confirm: ", Bold(phrase))
+	fmt.Fprintln(os.Stderr)
+	fmt.Fprintf(os.Stderr, "Type %s to confirm: ", Bold(phrase))
 
 	var response string
 	_, _ = fmt.Scanln(&response)
@@ -155,11 +157,11 @@ func (s *Spinner) Start() {
 			select {
 			case <-s.stop:
 				// Clear line
-				fmt.Printf("\r\033[K")
+				fmt.Fprintf(os.Stderr, "\r\033[K")
 				return
 			case <-ticker.C:
 				if Colors.Enabled {
-					Colors.Blue.Printf("\r%s %s", Sym.Spinner[i%len(Sym.Spinner)], s.message)
+					Colors.Blue.Fprintf(os.Stderr, "\r%s %s", Sym.Spinner[i%len(Sym.Spinner)], s.message)
 				}
 				i++
 			}
@@ -204,24 +206,24 @@ func Table(headers []string, rows [][]string) {
 
 	// Print headers
 	for i, h := range headers {
-		fmt.Printf("%-*s  ", widths[i], Bold(h))
+		fmt.Fprintf(os.Stderr, "%-*s  ", widths[i], Bold(h))
 	}
-	fmt.Println()
+	fmt.Fprintln(os.Stderr)
 
 	// Print separator
 	for i := range headers {
-		fmt.Printf("%-*s  ", widths[i], strings.Repeat("-", widths[i]))
+		fmt.Fprintf(os.Stderr, "%-*s  ", widths[i], strings.Repeat("-", widths[i]))
 	}
-	fmt.Println()
+	fmt.Fprintln(os.Stderr)
 
 	// Print rows
 	for _, row := range rows {
 		for i, cell := range row {
 			if i < len(widths) {
-				fmt.Printf("%-*s  ", widths[i], cell)
+				fmt.Fprintf(os.Stderr, "%-*s  ", widths[i], cell)
 			}
 		}
-		fmt.Println()
+		fmt.Fprintln(os.Stderr)
 	}
 }
 
@@ -266,17 +268,17 @@ func ErrorWithContext(code, message, context, cause, solution string) {
 // NextSteps prints suggested next steps
 func NextSteps(steps []string) {
 	if !Colors.Enabled {
-		fmt.Println("\nNext:")
+		fmt.Fprintln(os.Stderr, "\nNext:")
 		for _, step := range steps {
-			fmt.Printf("  %s %s\n", Sym.Arrow, step)
+			fmt.Fprintf(os.Stderr, "  %s %s\n", Sym.Arrow, step)
 		}
 		return
 	}
 
-	fmt.Println()
-	Colors.Bold.Println("Next:")
+	fmt.Fprintln(os.Stderr)
+	Colors.Bold.Fprintln(os.Stderr, "Next:")
 	for _, step := range steps {
-		Colors.Cyan.Printf("  %s ", Sym.Arrow)
-		fmt.Println(step)
+		Colors.Cyan.Fprintf(os.Stderr, "  %s ", Sym.Arrow)
+		fmt.Fprintln(os.Stderr, step)
 	}
 }

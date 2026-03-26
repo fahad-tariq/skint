@@ -179,9 +179,13 @@ func fetchOllama(baseURL, _ string) FetchResult {
 	return FetchResult{Models: models}
 }
 
-// fetchOpenRouter fetches models from the OpenRouter public models endpoint.
-func fetchOpenRouter(_ string, _ string) FetchResult {
+// fetchOpenRouter fetches models from the OpenRouter models endpoint.
+// Falls back to the public endpoint if baseURL is empty.
+func fetchOpenRouter(baseURL string, _ string) FetchResult {
 	url := "https://openrouter.ai/api/v1/models"
+	if baseURL != "" {
+		url = strings.TrimRight(baseURL, "/") + "/v1/models"
+	}
 	client := &http.Client{Timeout: fetchTimeout}
 	resp, err := client.Get(url)
 	if err != nil {
