@@ -13,6 +13,9 @@ import (
 
 func TestManagerLoad(t *testing.T) {
 	t.Run("no file returns defaults", func(t *testing.T) {
+		t.Setenv("NO_COLOR", "")
+		t.Setenv("SKINT_NO_COLOR", "")
+		t.Setenv("SKINT_OUTPUT_FORMAT", "")
 		dir := t.TempDir()
 		m, err := NewManagerWithPath(filepath.Join(dir, "config.yaml"))
 		if err != nil {
@@ -30,6 +33,28 @@ func TestManagerLoad(t *testing.T) {
 		}
 		if !cfg.ColorEnabled {
 			t.Error("ColorEnabled: expected true")
+		}
+	})
+
+	// A sandbox with no config.yaml must still honour SKINT_FORCE_FILE_STORE,
+	// otherwise secrets initialisation probes the OS keyring.
+	t.Run("no file still applies env overrides", func(t *testing.T) {
+		t.Setenv("SKINT_FORCE_FILE_STORE", "1")
+		t.Setenv("SKINT_OUTPUT_FORMAT", FormatJSON)
+		dir := t.TempDir()
+		m, err := NewManagerWithPath(filepath.Join(dir, "config.yaml"))
+		if err != nil {
+			t.Fatalf("NewManagerWithPath: %v", err)
+		}
+		if err := m.Load(); err != nil {
+			t.Fatalf("Load: %v", err)
+		}
+		cfg := m.Get()
+		if !cfg.ForceFileStore {
+			t.Error("ForceFileStore: expected true from SKINT_FORCE_FILE_STORE")
+		}
+		if cfg.OutputFormat != FormatJSON {
+			t.Errorf("OutputFormat: got %q, want %q", cfg.OutputFormat, FormatJSON)
 		}
 	})
 
@@ -554,6 +579,54 @@ func TestApplyEnvOverrides(t *testing.T) {
 				t.Helper()
 				if !cfg.NoBanner {
 					t.Error("NoBanner: expected true when SKINT_NO_BANNER is set")
+				}
+			},
+		},
+		{
+			name: "SKINT_FORCE_FILE_STORE enables file store",
+			envVars: map[string]string{
+				"SKINT_FORCE_FILE_STORE": "1",
+			},
+			check: func(t *testing.T, cfg *Config) {
+				t.Helper()
+				if !cfg.ForceFileStore {
+					t.Error("ForceFileStore: expected true when SKINT_FORCE_FILE_STORE is set")
+				}
+			},
+		},
+		{
+			name: "SKINT_FORCE_FILE_STORE true enables file store",
+			envVars: map[string]string{
+				"SKINT_FORCE_FILE_STORE": "true",
+			},
+			check: func(t *testing.T, cfg *Config) {
+				t.Helper()
+				if !cfg.ForceFileStore {
+					t.Error("ForceFileStore: expected true when SKINT_FORCE_FILE_STORE=true")
+				}
+			},
+		},
+		{
+			name: "SKINT_FORCE_FILE_STORE 0 leaves file store disabled",
+			envVars: map[string]string{
+				"SKINT_FORCE_FILE_STORE": "0",
+			},
+			check: func(t *testing.T, cfg *Config) {
+				t.Helper()
+				if cfg.ForceFileStore {
+					t.Error("ForceFileStore: expected false when SKINT_FORCE_FILE_STORE=0")
+				}
+			},
+		},
+		{
+			name: "SKINT_FORCE_FILE_STORE invalid value is ignored",
+			envVars: map[string]string{
+				"SKINT_FORCE_FILE_STORE": "yes please",
+			},
+			check: func(t *testing.T, cfg *Config) {
+				t.Helper()
+				if cfg.ForceFileStore {
+					t.Error("ForceFileStore: expected false for invalid SKINT_FORCE_FILE_STORE value")
 				}
 			},
 		},

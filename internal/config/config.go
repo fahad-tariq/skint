@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 
 	"gopkg.in/yaml.v3"
 )
@@ -82,7 +83,10 @@ func (m *Manager) Load() error {
 
 	// Check if file exists
 	if _, err := os.Stat(m.configFile); os.IsNotExist(err) {
-		// No config file yet, use defaults
+		// No config file yet, use defaults. Env overrides still apply so
+		// SKINT_FORCE_FILE_STORE keeps a config-less sandbox off the keyring.
+		m.applyEnvOverrides()
+		m.resolveDefaultProviderOverride()
 		return nil
 	}
 
@@ -210,6 +214,13 @@ func (m *Manager) applyEnvOverrides() {
 	if os.Getenv("SKINT_NO_BANNER") != "" {
 		m.overrides.noBanner = &fieldOverride[bool]{persisted: m.config.NoBanner, applied: true}
 		m.config.NoBanner = true
+	}
+	if v := os.Getenv("SKINT_FORCE_FILE_STORE"); v != "" {
+		if b, err := strconv.ParseBool(v); err == nil {
+			m.config.ForceFileStore = b
+		} else {
+			fmt.Fprintf(os.Stderr, "warning: ignoring invalid SKINT_FORCE_FILE_STORE=%q (use 1/0 or true/false)\n", v)
+		}
 	}
 }
 
