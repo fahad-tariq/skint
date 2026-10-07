@@ -27,6 +27,7 @@ type envOverrides struct {
 	outputFormat    *fieldOverride[string]
 	colorEnabled    *fieldOverride[bool]
 	noBanner        *fieldOverride[bool]
+	forceFileStore  *fieldOverride[bool]
 }
 
 // fieldOverride pairs the persisted value with the env value that replaced it.
@@ -217,6 +218,7 @@ func (m *Manager) applyEnvOverrides() {
 	}
 	if v := os.Getenv("SKINT_FORCE_FILE_STORE"); v != "" {
 		if b, err := strconv.ParseBool(v); err == nil {
+			m.overrides.forceFileStore = &fieldOverride[bool]{persisted: m.config.ForceFileStore, applied: b}
 			m.config.ForceFileStore = b
 		} else {
 			fmt.Fprintf(os.Stderr, "warning: ignoring invalid SKINT_FORCE_FILE_STORE=%q (use 1/0 or true/false)\n", v)
@@ -251,6 +253,7 @@ func (m *Manager) configForSave() Config {
 	c.OutputFormat = m.overrides.outputFormat.revert(c.OutputFormat)
 	c.ColorEnabled = m.overrides.colorEnabled.revert(c.ColorEnabled)
 	c.NoBanner = m.overrides.noBanner.revert(c.NoBanner)
+	c.ForceFileStore = m.overrides.forceFileStore.revert(c.ForceFileStore)
 	return c
 }
 

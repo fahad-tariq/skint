@@ -2,6 +2,12 @@
 
 <!-- Add changes following the format below - keep them concise and leave this comment as-is, use date +'%F %H:%M' for the date and local time  -->
 
+## 2026-10-07 15:50
+
+### Fixed
+
+- **Config**: `SKINT_FORCE_FILE_STORE` is no longer written to `config.yaml` on save, matching the other `SKINT_*` overrides
+
 ## 2026-07-06 17:05
 
 ### Fixed
