@@ -280,6 +280,7 @@ func TestSaveDoesNotPersistEnvOverrides(t *testing.T) {
 	t.Setenv("SKINT_DEFAULT_PROVIDER", "native")
 	t.Setenv("SKINT_NO_BANNER", "1")
 	t.Setenv("NO_COLOR", "1")
+	t.Setenv("SKINT_FORCE_FILE_STORE", "1")
 
 	dir := t.TempDir()
 	cfgPath := filepath.Join(dir, "config.yaml")
@@ -315,6 +316,9 @@ providers:
 	if m.Get().ColorEnabled {
 		t.Error("runtime ColorEnabled: expected false from env override")
 	}
+	if !m.Get().ForceFileStore {
+		t.Error("runtime ForceFileStore: expected true from env override")
+	}
 
 	if err := m.Save(); err != nil {
 		t.Fatalf("Save: %v", err)
@@ -324,6 +328,7 @@ providers:
 	os.Unsetenv("SKINT_DEFAULT_PROVIDER")
 	os.Unsetenv("SKINT_NO_BANNER")
 	os.Unsetenv("NO_COLOR")
+	os.Unsetenv("SKINT_FORCE_FILE_STORE")
 
 	m2, err := NewManagerWithPath(cfgPath)
 	if err != nil {
@@ -341,6 +346,9 @@ providers:
 	}
 	if !persisted.ColorEnabled {
 		t.Error("persisted ColorEnabled: expected true (env override should not persist)")
+	}
+	if persisted.ForceFileStore {
+		t.Error("persisted ForceFileStore: expected false (env override should not persist)")
 	}
 }
 
