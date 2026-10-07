@@ -116,7 +116,7 @@ In sandboxed environments (e.g. nono), the OS keyring is accessed via `securityd
 
     force_file_store: true
 
-Or set `SKINT_FORCE_FILE_STORE=1`. The env var applies only to that run and is never written to `config.yaml`, so you can set it in your sandbox wrapper and keep using the keyring elsewhere. Keys saved to the file store inside the sandbox still work outside it.
+Or set `SKINT_FORCE_FILE_STORE=1`. The env var applies only to that run and is never written to `config.yaml`, so set it in your sandbox profile or wrapper for every sandboxed run and keep using the keyring elsewhere. Keys saved to the file store inside the sandbox still work outside it, provided the sandbox sees the same hostname, home directory and (on Linux) `/etc/machine-id`, which the file store's encryption key is derived from. Each provider has one key reference, so re-entering a key outside the sandbox moves it back to the keyring, where the sandbox can't read it.
 
 Sandbox permissions needed:
 
