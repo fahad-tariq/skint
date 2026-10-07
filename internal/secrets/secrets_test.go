@@ -234,3 +234,29 @@ func TestRetrieveByReferenceForceFileStore(t *testing.T) {
 		}
 	})
 }
+
+// A key stored as file:<name> (e.g. inside a sandbox with SKINT_FORCE_FILE_STORE)
+// must still resolve later when the keyring is available and in use.
+func TestRetrieveByReferenceFileRefInKeyringMode(t *testing.T) {
+	errKeyringCalled := errors.New("keyring must not be called")
+	keyring.MockInitWithError(errKeyringCalled)
+
+	tmpDir := t.TempDir()
+	fs, err := NewFileStore(tmpDir)
+	if err != nil {
+		t.Fatalf("NewFileStore: %v", err)
+	}
+	if err := fs.Store("myprovider", "sk-file-key"); err != nil {
+		t.Fatalf("Store: %v", err)
+	}
+
+	m := &Manager{useKeyring: true, dataDir: tmpDir}
+
+	got, err := m.RetrieveByReference("file:myprovider")
+	if err != nil {
+		t.Fatalf("RetrieveByReference: %v", err)
+	}
+	if got != "sk-file-key" {
+		t.Errorf("got %q, want %q", got, "sk-file-key")
+	}
+}

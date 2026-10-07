@@ -57,6 +57,7 @@ Skint is a CLI launcher that wraps Claude Code with different LLM provider confi
 - `launcher.go` uses `syscall.Exec` on Unix which replaces the process entirely - code after the exec call never runs
 - The `removeEnvVars` function in launcher parses env strings manually (splitting on first `=`) - entries without `=` are silently dropped
 - `config.Provider` has both `APIKey` (for migration only, stored in YAML) and `resolvedAPIKey` (unexported, loaded at runtime from keyring/file) - always use `GetAPIKey()`/`SetResolvedAPIKey()`, never read `APIKey` directly
+- New `SKINT_*` overrides that map to a `Config` field must be recorded in `envOverrides` (in `applyEnvOverrides`) and reverted in `configForSave`, otherwise `Save` writes the transient env value to `config.yaml`
 - TUI tests drive `Model.Update` / handlers directly (no TTY); see `internal/tui/tui_test.go`
 - `LaunchNative` in launcher exec's claude without any env var overrides; `Launch` sets provider-specific env vars
 </GOTCHAS>

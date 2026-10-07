@@ -133,9 +133,15 @@ func (m *Manager) RetrieveByReference(ref string) (string, error) {
 		}
 		return keyring.Get(ServiceName, providerName)
 	case StorageTypeFile:
-		// Use file store
+		// In keyring mode the file store isn't created up front, but file: refs
+		// written earlier (keyring fallback, or SKINT_FORCE_FILE_STORE in a
+		// sandbox) must still resolve.
 		if m.fileStore == nil {
-			return "", fmt.Errorf("file store not initialized")
+			fileStore, err := NewFileStore(m.dataDir)
+			if err != nil {
+				return "", fmt.Errorf("failed to create file store: %w", err)
+			}
+			m.fileStore = fileStore
 		}
 		return m.fileStore.Retrieve(providerName)
 	default:

@@ -7,6 +7,7 @@
 ### Fixed
 
 - **Config**: `SKINT_FORCE_FILE_STORE` is no longer written to `config.yaml` on save, matching the other `SKINT_*` overrides
+- **Secrets**: `file:` key references now resolve when the OS keyring is in use (previously `file store not initialized`), so keys saved inside a sandbox with `SKINT_FORCE_FILE_STORE` keep working outside it
 
 ## 2026-07-06 17:05
 
